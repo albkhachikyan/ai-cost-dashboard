@@ -6,7 +6,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 COPY app ./app
 
-FROM python:3.12-slim-bookworm AS runtime
+FROM python:3.15-slim-bookworm AS runtime
 ENV PATH="/srv/.venv/bin:$PATH" PYTHONUNBUFFERED=1
 WORKDIR /srv
 RUN useradd --system --uid 10001 --no-create-home app \
