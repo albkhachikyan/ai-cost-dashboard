@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.venv/
+dist/
+coverage/
+htmlcov/
+graphify-out/
+data/
+*.db
+*.lock
+pnpm-lock.yaml
+uv.lock
+.env*
+.git/
+.husky/_/
+*.tsbuildinfo

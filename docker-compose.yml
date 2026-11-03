@@ -1,0 +1,41 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      CLAUDE_PROJECTS_DIR: ${CLAUDE_PROJECTS_DIR:-/claude/projects}
+      DB_PATH: ${DB_PATH:-/data/usage.db}
+      SYNC_INTERVAL_S: ${SYNC_INTERVAL_S:-60}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ${HOME}/.claude/projects:/claude/projects:ro
+      - data:/data
+    expose: ["8000"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3002}:3000"
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  data:
