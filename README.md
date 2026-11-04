@@ -1,26 +1,45 @@
-# ai-cost
+# ai-cost: Claude Code usage and cost dashboard
 
-Local, free, open-source dashboard for Claude Code token usage: tokens per day, per model, and estimated cost.
+ai-cost is a free, open-source, self-hosted dashboard that reads your local Claude Code transcripts and shows how many tokens you used today, per hour, per day and per model (Opus, Sonnet, Haiku), with an estimated API cost.
 
-[![CI](https://github.com/OWNER/ai-cost/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/ai-cost/actions/workflows/ci.yml)
+It runs on 127.0.0.1, mounts your transcripts read-only, makes no LLM calls, and no data leaves your machine.
+
+[![CI](https://github.com/albkhachikyan/ai-cost-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/albkhachikyan/ai-cost-dashboard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![Next.js 16](https://img.shields.io/badge/next.js-16-black.svg)
 
-## What it does
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png" />
+  <img src="docs/screenshot-light.png" alt="ai-cost dashboard, Today section: Claude Code token usage per hour, model by hour heatmap, busiest hour and estimated LLM cost" />
+</picture>
 
-- Reads your local Claude Code transcripts (`~/.claude/projects/**/*.jsonl`) and imports them into SQLite.
-- Shows tokens per day and per model, with input, output, cache read, and cache write broken out.
-- Estimates cost from a built-in price table. Unknown models show `—` instead of a guessed number.
-- Redesigned dashboard with KPI cards, a tokens-per-day chart, an activity heatmap, and a by-model table.
+## Why
+
+Claude Code does not show how many tokens you spend per day or per hour. If you are on a subscription (Pro, Max, Team), you are not billed per token, but you may still want to know what the same usage would cost at Anthropic API pricing. ai-cost is a local-first token tracker that answers both questions from files already on your disk.
+
+## Features
+
+- **Today section, always on top:** today's estimated cost and total tokens, the busiest hour, tokens per hour (UTC), and a model by hour heatmap. It is the first thing you see when you open the dashboard.
+- **Trends section below it:** a 7, 30 or 90 day range (30 by default) with cost, total tokens, daily average, tokens per day and a model by week heatmap.
+- Per-model breakdown (Opus, Sonnet, Haiku) with cost share.
+- Input, output, cache read and cache write tokens accounted separately.
+- Dedup of streamed messages: the maximum token counts per message are kept.
+- Estimated cost from a built-in price table. Unknown models show `—` instead of a guessed number.
 - Light and dark theme that follows your system setting.
-- ⌘K command palette for navigation and actions.
+- ⌘K command palette and single-key shortcuts.
 - CSV export of the usage data.
+- Background sync every 60 seconds.
 
 ## Screenshots
 
-![Dashboard, light](docs/screenshot-light.png)
-![Dashboard, dark](docs/screenshot-dark.png)
+Today section, dark theme:
+
+![ai-cost Today section in dark theme, showing Claude Code token usage per hour, busiest hour and estimated cost](docs/screenshot-dark.png)
+
+Full dashboard, dark theme (Today on top, 30-day Trends below):
+
+![ai-cost full dashboard in dark theme: Today section with hourly usage above the 30-day Trends section with daily tokens, per-model breakdown and cost](docs/screenshot-full-dark.png)
 
 ## How it works
 
@@ -34,9 +53,14 @@ FastAPI backend ── SQLite (/data/usage.db, WAL) ── REST /api/*   [intern
 Next.js frontend → 127.0.0.1:3000
 ```
 
-- **Connect:** the backend reads `~/.claude/projects` read-only and runs a first sync.
+- **Connect:** the backend reads `~/.claude/projects/**/*.jsonl` read-only and runs a first sync into SQLite.
 - Claude Code streams each assistant message across several lines that share one `message.id`. The parser dedups by message id and keeps the final (maximum) token counts, not the first partial line.
 - A background sync runs every 60 seconds (`SYNC_INTERVAL_S`). Only new bytes are parsed, and each file's offset advances only to the last complete line.
+- Hours and days are in UTC.
+
+### API
+
+Endpoints: `/api/health`, `/api/connection`, `/api/sync`, and `/api/usage?days=1..365`, which includes the `hourly` breakdown for today. The backend is reachable only inside the Docker network; the browser never calls it.
 
 ## Quickstart
 
@@ -72,7 +96,7 @@ Copy `.env.example` to `.env`. Every variable has a safe default.
 | ⌘K / Ctrl+K | Open command palette                | no (always on) |
 | `/`         | Open command palette                | yes            |
 | `s`         | Sync now                            | yes            |
-| `1` `2` `3` | 7 / 30 / 90 days                    | yes            |
+| `1` `2` `3` | 7 / 30 / 90 days (Trends range)     | yes            |
 | `e`         | Export CSV                          | yes            |
 | `t`         | Cycle theme (system → light → dark) | yes            |
 | `?`         | Shortcuts dialog                    | yes            |
@@ -81,6 +105,32 @@ Copy `.env.example` to `.env`. Every variable has a safe default.
 Connect and Disconnect have no shortcut; they are available only from the palette or the button. Hints are rendered with shadcn `Kbd`, showing ⌘ on macOS and Ctrl elsewhere.
 
 Single-key shortcuts can be turned off in the shortcuts dialog (`?`).
+
+## FAQ
+
+### How do I see my Claude Code token usage?
+
+Run ai-cost, open http://127.0.0.1:3000 and click Connect. It imports the transcripts Claude Code already writes to `~/.claude/projects` and shows token usage per hour, day and model.
+
+### How much would my Claude Code usage cost on the API?
+
+The dashboard multiplies your input, output, cache read and cache write tokens by Anthropic API prices per model and shows the total for today and for 7, 30 and 90 days. This is useful on Pro, Max or Team plans, which are not billed per token.
+
+### Does ai-cost send my data anywhere?
+
+No. It reads transcripts through a read-only mount, stores data in a local SQLite file, and makes no LLM calls. The frontend binds to `127.0.0.1` and the backend port is not published.
+
+### Is the cost exact?
+
+No. It is an estimate for comparison, not a billing record. Prices are a hard-coded table and may differ from your actual invoice or plan terms.
+
+### Which models are supported?
+
+Prices for the Opus, Sonnet and Haiku families are hard-coded in `backend/app/services/pricing_service.py`. Models without a known price still count tokens, and their cost shows `—`.
+
+### Why are hours and days in UTC?
+
+Transcript timestamps are stored in UTC, so grouping by UTC keeps results the same regardless of your timezone or where the container runs. The Today section therefore shows the current UTC day.
 
 ## Design
 
@@ -136,6 +186,12 @@ frontend/src/
 ```
 
 Backend follows MVC with services and repositories. Frontend follows Feature-Sliced Design (FSD).
+
+## Contributing
+
+Issues and pull requests are welcome. Use Conventional Commits, and make sure `make lint test` passes before you push.
+
+If ai-cost is useful to you, a star on GitHub helps others find it.
 
 ## License
 
