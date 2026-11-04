@@ -1,4 +1,4 @@
-# ai-cost — design system
+# tokscope — design system
 
 Binding for all UI work in `frontend/`. When code and this file disagree, this file wins. If it's wrong, fix it in the same commit as the code.
 

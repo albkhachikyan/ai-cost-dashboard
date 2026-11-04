@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     return new Response(csv, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="ai-cost-${days}d-${date}.csv"`,
+        'Content-Disposition': `attachment; filename="tokscope-${days}d-${date}.csv"`,
         'Cache-Control': 'no-store',
       },
     });

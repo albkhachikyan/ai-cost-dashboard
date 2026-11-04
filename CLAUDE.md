@@ -1,4 +1,4 @@
-# ai-cost — agent rules
+# tokscope — agent rules
 
 Local, free, open-source dashboard for **Claude Code token usage**: tokens per day, per model, estimated cost.
 Source = Claude Code transcripts in `~/.claude/projects/**/*.jsonl` (read-only). Storage = SQLite. No LLM calls.

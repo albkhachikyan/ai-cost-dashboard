@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-export const SINGLE_KEY_STORAGE_KEY = 'ai-cost:single-key-shortcuts';
+export const SINGLE_KEY_STORAGE_KEY = 'tokscope:single-key-shortcuts';
 
 const listeners = new Set<() => void>();
 
