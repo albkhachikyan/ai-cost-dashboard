@@ -11,16 +11,15 @@ const railItem = cva(
   'inline-flex size-11 cursor-pointer items-center justify-center rounded-pill text-foreground transition-colors duration-fast hover:bg-accent aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground',
 );
 
+/** tokscope mark: ink/paper stem (follows the theme) with the green crossbar. See docs/brand. */
 function LogoMark() {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className="size-11">
-      <circle cx="16" cy="16" r="16" className="fill-brand-foreground" />
-      <g className="stroke-brand" strokeWidth="2.5" strokeLinecap="round">
-        <line x1="16" y1="8" x2="16" y2="24" />
-        <line x1="8" y1="16" x2="24" y2="16" />
-        <line x1="10.3" y1="10.3" x2="21.7" y2="21.7" />
-        <line x1="21.7" y1="10.3" x2="10.3" y2="21.7" />
-      </g>
+    <svg viewBox="0 0 256 256" aria-hidden="true" className="size-11">
+      <path
+        className="fill-foreground"
+        d="M85 54A24 24 0 0 1 133 54V150A32 32 0 0 0 165 182H191A24 24 0 0 1 191 230H165A80 80 0 0 1 85 150Z"
+      />
+      <rect x="41" y="74" width="172" height="48" rx="24" className="fill-brand" />
     </svg>
   );
 }
