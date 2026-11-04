@@ -231,3 +231,7 @@ No custom cursor follower.
 | `table` / `ol` for data            | `div` grids for data                           |
 | Text alternative for every chart   | Color as the only signal                       |
 | `min-h-dvh`                        | `h-screen` / `100vh`                           |
+
+## Logo
+
+The tokscope mark (a lowercase t built from a chart bar, with a green `brand` crossbar) and all its variants live in [`docs/brand`](docs/brand/README.md). In the UI the stem uses `fill-foreground` and the crossbar `fill-brand`, so it follows the theme. Never redraw it with an asterisk or star.

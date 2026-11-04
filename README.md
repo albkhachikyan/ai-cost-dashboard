@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/tokscope-horizontal-reversed.svg" />
+    <img src="docs/brand/tokscope-horizontal.svg" alt="tokscope" width="360" />
+  </picture>
+</p>
+
 # tokscope: Claude Code usage and cost dashboard
 
 tokscope is a free, open-source, self-hosted dashboard that reads your local Claude Code transcripts and shows how many tokens you used today, per hour, per day and per model (Opus, Sonnet, Haiku), with an estimated API cost.
@@ -192,6 +199,10 @@ Backend follows MVC with services and repositories. Frontend follows Feature-Sli
 Issues and pull requests are welcome. Use Conventional Commits, and make sure `make lint test` passes before you push.
 
 If tokscope is useful to you, a star on GitHub helps others find it.
+
+## Brand
+
+The logo, colours and usage rules are in [`docs/brand`](docs/brand/README.md).
 
 ## License
 
