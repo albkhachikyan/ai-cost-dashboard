@@ -17,6 +17,12 @@ export const dailyUsageSchema = z.object({
   ...tokenCounts,
 });
 
+export const hourlyUsageSchema = z.object({
+  hour: z.number().int().min(0).max(23),
+  model: z.string(),
+  ...tokenCounts,
+});
+
 export const modelUsageSchema = z.object({
   model: z.string(),
   ...tokenCounts,
@@ -28,9 +34,11 @@ export const usageReportSchema = z.object({
   totals: usageTotalsSchema,
   daily: z.array(dailyUsageSchema),
   by_model: z.array(modelUsageSchema),
+  hourly: z.array(hourlyUsageSchema),
 });
 
 export type UsageTotals = z.infer<typeof usageTotalsSchema>;
 export type DailyUsage = z.infer<typeof dailyUsageSchema>;
+export type HourlyUsage = z.infer<typeof hourlyUsageSchema>;
 export type ModelUsage = z.infer<typeof modelUsageSchema>;
 export type UsageReport = z.infer<typeof usageReportSchema>;

@@ -8,11 +8,11 @@ import { syncNowAction } from '@/features/sync-now';
 import { useCycleTheme } from '@/features/toggle-theme';
 import { notify } from '@/shared/lib';
 
-const DEFAULT_DAYS = 30;
+const DEFAULT_DAYS = 1;
 
 function currentDays(): number {
   const parsed = Number(new URLSearchParams(window.location.search).get('days'));
-  return [7, 30, 90].includes(parsed) ? parsed : DEFAULT_DAYS;
+  return [1, 7, 30, 90].includes(parsed) ? parsed : DEFAULT_DAYS;
 }
 
 /** Every dashboard action reachable from the palette or a shortcut. */
@@ -63,7 +63,7 @@ export function useAppActions(connected: boolean) {
       document.body.append(link);
       link.click();
       link.remove();
-      notify.success(`Exporting the last ${days} days`);
+      notify.success(days === 1 ? 'Exporting today' : `Exporting the last ${days} days`);
     },
     setRange: (days: number) => router.push(`/?days=${days}`),
     cycleTheme: theme.cycle,

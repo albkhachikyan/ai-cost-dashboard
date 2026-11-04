@@ -22,4 +22,21 @@ describe('KpiCards', () => {
     render(<KpiCards report={{ ...reportFixture, daily: [], by_model: [] }} today="2026-11-03" />);
     expect(screen.getByText('No usage yet')).toBeInTheDocument();
   });
+
+  it('shows the busiest hour when days is 1', () => {
+    render(<KpiCards report={{ ...reportFixture, days: 1 }} today="2026-11-03" />);
+    expect(screen.getByRole('heading', { name: 'Busiest hour' })).toBeInTheDocument();
+    expect(screen.getByText(/^\d{2}:00 UTC$/)).toBeInTheDocument();
+    expect(screen.getByText('Today (UTC)')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Show activity by hour' })).toHaveAttribute(
+      'href',
+      '#activity',
+    );
+  });
+
+  it('shows a dash for the busiest hour without hourly data', () => {
+    render(<KpiCards report={{ ...reportFixture, days: 1, hourly: [] }} today="2026-11-03" />);
+    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('No usage yet today')).toBeInTheDocument();
+  });
 });

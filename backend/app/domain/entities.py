@@ -54,3 +54,13 @@ class DailyUsageRow:
     output_tokens: int
     cache_read_tokens: int
     cache_write_tokens: int
+
+
+@dataclass(frozen=True, slots=True)
+class HourlyUsageRow:
+    hour: int
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cache_read_tokens: int
+    cache_write_tokens: int

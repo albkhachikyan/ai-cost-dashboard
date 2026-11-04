@@ -2,8 +2,8 @@ import { cva } from 'class-variance-authority';
 import { ArrowUpRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import type { UsageReport } from '@/entities/usage';
-import { cn, formatDay } from '@/shared/lib';
+import { busiestHour, formatHour, type UsageReport } from '@/entities/usage';
+import { cn, formatDay, formatTokens } from '@/shared/lib';
 import { buttonVariants, CountUp, EmptyState, ScrollLink, Skeleton, panel } from '@/shared/ui';
 
 const kpiCard = cva('flex min-h-44 flex-col justify-between', {
@@ -80,6 +80,8 @@ export function KpiCards({ report, today }: KpiCardsProps) {
     .filter((d) => d.day === today)
     .reduce((sum, d) => sum + d.total, 0);
   const modelCount = report.by_model.length;
+  const hourly = report.days === 1;
+  const busiest = busiestHour(report.hourly);
   return (
     <section aria-label="Key figures" className="grid gap-4 md:gap-5 lg:grid-cols-3">
       <KpiCard
@@ -95,20 +97,32 @@ export function KpiCards({ report, today }: KpiCardsProps) {
         id="kpi-tokens"
         title="Total tokens"
         value={<CountUp value={report.totals.total} format="tokens" />}
-        caption={`Last ${report.days} days`}
+        caption={hourly ? 'Today (UTC)' : `Last ${report.days} days`}
         href="#tokens-per-day"
         linkLabel="Show tokens per day"
         tone="default"
       />
-      <KpiCard
-        id="kpi-today"
-        title="Today"
-        value={<CountUp value={todayTotal} format="tokens" />}
-        caption={`${formatDay(today)} (UTC)`}
-        href="#activity"
-        linkLabel="Show activity"
-        tone="default"
-      />
+      {hourly ? (
+        <KpiCard
+          id="kpi-busiest"
+          title="Busiest hour"
+          value={busiest ? `${formatHour(busiest.hour)} UTC` : '—'}
+          caption={busiest ? `${formatTokens(busiest.total)} tokens` : 'No usage yet today'}
+          href="#activity"
+          linkLabel="Show activity by hour"
+          tone="default"
+        />
+      ) : (
+        <KpiCard
+          id="kpi-today"
+          title="Today"
+          value={<CountUp value={todayTotal} format="tokens" />}
+          caption={`${formatDay(today)} (UTC)`}
+          href="#activity"
+          linkLabel="Show activity"
+          tone="default"
+        />
+      )}
     </section>
   );
 }

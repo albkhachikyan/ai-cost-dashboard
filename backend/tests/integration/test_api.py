@@ -46,6 +46,7 @@ def test_usage_report(client: TestClient) -> None:
     assert body["by_model"][0]["model"] == "claude-opus-5-5"
     assert body["by_model"][0]["share"] == pytest.approx(3160 / 3690)
     assert body["totals"]["cost_usd"] > 0
+    assert body["hourly"] == []  # fixture messages are not from today (UTC)
     default = client.get("/api/usage").json()
     assert default["days"] == 30
 

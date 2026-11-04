@@ -17,7 +17,9 @@ interface ActivityHeatmapProps {
 }
 
 export function ActivityHeatmap({ heatmap, days, className }: ActivityHeatmapProps) {
-  const unit = days > 7 ? 'week' : 'day';
+  const hourly = days === 1;
+  let unit = days > 7 ? 'week' : 'day';
+  if (hourly) unit = 'hour';
   return (
     <section
       id="activity"
@@ -32,14 +34,16 @@ export function ActivityHeatmap({ heatmap, days, className }: ActivityHeatmapPro
       </div>
       {heatmap.rows.length === 0 ? (
         <p className="py-12 text-center text-body text-muted-foreground">
-          No activity recorded in this period.
+          {hourly ? 'No activity recorded today.' : 'No activity recorded in this period.'}
         </p>
       ) : (
         <>
           <div data-lenis-prevent className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-1">
               <caption className="sr-only">
-                Tokens per model per {unit}, last {days} days
+                {hourly
+                  ? 'Tokens per model per hour, today (UTC)'
+                  : `Tokens per model per ${unit}, last ${days} days`}
               </caption>
               <thead>
                 <tr>

@@ -2,20 +2,28 @@ from datetime import date
 
 import pytest
 
-from app.domain.entities import DailyUsageRow
+from app.domain.entities import DailyUsageRow, HourlyUsageRow
 from app.repositories.usage_repository import UsageRepository
 from app.services.pricing_service import PricingCatalog
 from app.services.usage_service import UsageService
 
 
 class FakeUsageRepository(UsageRepository):
-    def __init__(self, rows: list[DailyUsageRow]) -> None:  # no super: no database needed
+    def __init__(  # no super: no database needed
+        self, rows: list[DailyUsageRow], hourly: list[HourlyUsageRow] | None = None
+    ) -> None:
         self.rows = rows
+        self.hourly_rows = hourly or []
+        self.hourly_day: str | None = None
         self.since: str | None = None
 
     def daily(self, since_day: str) -> list[DailyUsageRow]:
         self.since = since_day
         return self.rows
+
+    def hourly(self, day: str) -> list[HourlyUsageRow]:
+        self.hourly_day = day
+        return self.hourly_rows
 
 
 def _service(rows: list[DailyUsageRow]) -> tuple[UsageService, FakeUsageRepository]:
@@ -55,3 +63,22 @@ def test_report_aggregation() -> None:
     assert report.totals.cost_usd == pytest.approx(21.0)  # unknown cost excluded
     assert sonnet.share == pytest.approx(3_000_000 / 3_000_020)
     assert sum(m.share for m in report.by_model) == pytest.approx(1.0)
+
+
+def test_hourly_mapping() -> None:
+    hourly = [
+        HourlyUsageRow(14, "mystery-model", 5, 5, 0, 0),
+        HourlyUsageRow(9, "claude-sonnet-4-5", 1_000_000, 0, 10, 20),
+    ]
+    repo = FakeUsageRepository([], hourly)
+    report = UsageService(repo, PricingCatalog(), lambda: date(2026, 11, 3)).report(30)
+    assert repo.hourly_day == "2026-11-03"
+    assert [(h.hour, h.model) for h in report.hourly] == [
+        (9, "claude-sonnet-4-5"),
+        (14, "mystery-model"),
+    ]
+    assert report.hourly[0].total == 1_000_030
+    assert report.hourly[0].cost_usd is not None
+    assert report.hourly[0].cost_usd > 3.0
+    assert report.hourly[1].total == 10
+    assert report.hourly[1].cost_usd is None

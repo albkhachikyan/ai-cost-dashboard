@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { cn } from '@/shared/lib';
 import { pill, SPRING } from '@/shared/ui';
 
-export const RANGE_OPTIONS = [7, 30, 90] as const;
+export const RANGE_OPTIONS = [1, 7, 30, 90] as const;
 
 export function RangeSelect({ days }: { days: number }) {
   return (
@@ -28,7 +28,7 @@ export function RangeSelect({ days }: { days: number }) {
                 className="absolute inset-0 rounded-pill bg-primary"
               />
             ) : null}
-            <span className="relative">{option}d</span>
+            <span className="relative">{option === 1 ? 'Today' : `${option}d`}</span>
           </Link>
         );
       })}

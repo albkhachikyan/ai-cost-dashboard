@@ -2,7 +2,13 @@ import { render, screen } from '@testing-library/react';
 import { configureAxe } from 'vitest-axe';
 import { describe, expect, it, vi } from 'vitest';
 
-import { reportFixture, toDailyTotals, toHeatmap } from '@/entities/usage';
+import {
+  reportFixture,
+  toDailyTotals,
+  toHeatmap,
+  toHourlyHeatmap,
+  toHourlyTotals,
+} from '@/entities/usage';
 import { ActivityHeatmap } from '@/widgets/activity-heatmap';
 import { ShortcutsDialog } from '@/features/keyboard-shortcuts/ui/shortcuts-dialog';
 import { AppRail } from '@/widgets/app-rail';
@@ -41,8 +47,21 @@ describe('dashboard a11y', () => {
       <main>
         <h1>Your Claude usage</h1>
         <KpiCards report={reportFixture} today={TODAY} />
-        <TokensPerDay series={toDailyTotals(reportFixture.daily, 30, TODAY)} />
+        <TokensPerDay granularity="day" series={toDailyTotals(reportFixture.daily, 30, TODAY)} />
         <ActivityHeatmap heatmap={toHeatmap(reportFixture.daily, 30, TODAY)} days={30} />
+        <ModelBreakdown models={reportFixture.by_model} />
+      </main>,
+    );
+    expect((await axe(container)).violations).toEqual([]);
+  });
+
+  it('hour-mode widgets have no axe violations', async () => {
+    const { container } = render(
+      <main>
+        <h1>Your Claude usage</h1>
+        <KpiCards report={{ ...reportFixture, days: 1 }} today={TODAY} />
+        <TokensPerDay granularity="hour" series={toHourlyTotals(reportFixture.hourly)} />
+        <ActivityHeatmap heatmap={toHourlyHeatmap(reportFixture.hourly)} days={1} />
         <ModelBreakdown models={reportFixture.by_model} />
       </main>,
     );

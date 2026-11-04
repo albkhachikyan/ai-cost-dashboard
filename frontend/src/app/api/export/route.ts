@@ -4,11 +4,13 @@ import { getUsage } from '@/entities/usage';
 import { ApiError } from '@/shared/api';
 import { toCsv } from '@/shared/lib';
 
-const daysSchema = z.coerce.number().pipe(z.union([z.literal(7), z.literal(30), z.literal(90)]));
+const daysSchema = z.coerce
+  .number()
+  .pipe(z.union([z.literal(1), z.literal(7), z.literal(30), z.literal(90)]));
 
 export async function GET(request: Request) {
   const parsed = daysSchema.safeParse(new URL(request.url).searchParams.get('days'));
-  const days = parsed.success ? parsed.data : 30;
+  const days = parsed.success ? parsed.data : 1;
 
   try {
     const report = await getUsage(days);

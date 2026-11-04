@@ -1,7 +1,7 @@
 import { DashboardView } from '@/views/dashboard';
 
-const ALLOWED_DAYS = [7, 30, 90];
-const DEFAULT_DAYS = 30;
+const ALLOWED_DAYS = [1, 7, 30, 90];
+const DEFAULT_DAYS = 1;
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 

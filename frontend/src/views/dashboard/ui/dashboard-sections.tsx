@@ -1,5 +1,11 @@
 import { getConnection } from '@/entities/connection';
-import { getUsage, toDailyTotals, toHeatmap } from '@/entities/usage';
+import {
+  getUsage,
+  toDailyTotals,
+  toHeatmap,
+  toHourlyHeatmap,
+  toHourlyTotals,
+} from '@/entities/usage';
 import { ConnectButton } from '@/features/connect-claude-code';
 import { ExportCsvButton } from '@/features/export-csv';
 import { RangeSelect } from '@/features/select-range';
@@ -73,10 +79,17 @@ export async function TokensSection({
   const days = await daysPromise;
   const { usage, empty } = await load(days);
   if (empty) return null;
-  const series = toDailyTotals(usage.daily, days, todayUtc());
   return (
     <Reveal index={1} {...(className ? { className } : {})}>
-      <TokensPerDay series={series} className="h-full" />
+      {days === 1 ? (
+        <TokensPerDay granularity="hour" series={toHourlyTotals(usage.hourly)} className="h-full" />
+      ) : (
+        <TokensPerDay
+          granularity="day"
+          series={toDailyTotals(usage.daily, days, todayUtc())}
+          className="h-full"
+        />
+      )}
     </Reveal>
   );
 }
@@ -91,7 +104,8 @@ export async function ActivitySection({
   const days = await daysPromise;
   const { usage, empty } = await load(days);
   if (empty) return null;
-  const heatmap = toHeatmap(usage.daily, days, todayUtc());
+  const heatmap =
+    days === 1 ? toHourlyHeatmap(usage.hourly) : toHeatmap(usage.daily, days, todayUtc());
   return (
     <Reveal index={2} {...(className ? { className } : {})}>
       <ActivityHeatmap heatmap={heatmap} days={days} className="h-full" />
