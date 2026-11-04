@@ -32,7 +32,7 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           package_json_file: frontend/package.json
       - uses: actions/setup-node@v4
@@ -57,7 +57,7 @@ jobs:
       - run: uv sync --frozen
         working-directory: backend
       - run: uv run --directory backend pip-audit
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           package_json_file: frontend/package.json
       - run: pnpm --dir frontend audit --prod --audit-level high
