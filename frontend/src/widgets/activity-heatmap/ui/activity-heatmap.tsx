@@ -50,13 +50,19 @@ export function ActivityHeatmap({ heatmap, days, className }: ActivityHeatmapPro
                   <th scope="col">
                     <span className="sr-only">Model</span>
                   </th>
-                  {heatmap.columns.map((column) => (
+                  {heatmap.columns.map((column, index) => (
                     <th
                       key={column.key}
                       scope="col"
                       className="pb-1 text-center text-caption font-normal whitespace-nowrap text-muted-foreground"
                     >
-                      {column.label}
+                      {/* 24 hour labels don't fit: show every 3rd, keep the rest for screen readers */}
+                      <span
+                        data-minor={hourly && index % 3 !== 0}
+                        className="data-[minor=true]:sr-only"
+                      >
+                        {column.label}
+                      </span>
                     </th>
                   ))}
                 </tr>
@@ -73,7 +79,10 @@ export function ActivityHeatmap({ heatmap, days, className }: ActivityHeatmapPro
                     </th>
                     {row.cells.map((cell, index) => (
                       <td key={heatmap.columns[index]?.key} className="p-0">
-                        <span data-level={cell.level} className={heatCell()}>
+                        <span
+                          data-level={cell.level}
+                          className={heatCell({ size: hourly ? 'compact' : 'cell' })}
+                        >
                           <span className="sr-only">{cell.label}</span>
                         </span>
                       </td>
