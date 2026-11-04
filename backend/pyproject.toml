@@ -1,5 +1,5 @@
 [project]
-name = "ai-cost-backend"
+name = "tokscope-backend"
 version = "0.1.0"
 description = "Claude Code token usage dashboard backend"
 requires-python = ">=3.12,<3.13"

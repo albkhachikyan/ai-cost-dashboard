@@ -1,22 +1,22 @@
-# ai-cost: Claude Code usage and cost dashboard
+# tokscope: Claude Code usage and cost dashboard
 
-ai-cost is a free, open-source, self-hosted dashboard that reads your local Claude Code transcripts and shows how many tokens you used today, per hour, per day and per model (Opus, Sonnet, Haiku), with an estimated API cost.
+tokscope is a free, open-source, self-hosted dashboard that reads your local Claude Code transcripts and shows how many tokens you used today, per hour, per day and per model (Opus, Sonnet, Haiku), with an estimated API cost.
 
 It runs on 127.0.0.1, mounts your transcripts read-only, makes no LLM calls, and no data leaves your machine.
 
-[![CI](https://github.com/albkhachikyan/ai-cost-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/albkhachikyan/ai-cost-dashboard/actions/workflows/ci.yml)
+[![CI](https://github.com/albkhachikyan/tokscope/actions/workflows/ci.yml/badge.svg)](https://github.com/albkhachikyan/tokscope/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![Next.js 16](https://img.shields.io/badge/next.js-16-black.svg)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png" />
-  <img src="docs/screenshot-light.png" alt="ai-cost dashboard, Today section: Claude Code token usage per hour, model by hour heatmap, busiest hour and estimated LLM cost" />
+  <img src="docs/screenshot-light.png" alt="tokscope dashboard, Today section: Claude Code token usage per hour, model by hour heatmap, busiest hour and estimated LLM cost" />
 </picture>
 
 ## Why
 
-Claude Code does not show how many tokens you spend per day or per hour. If you are on a subscription (Pro, Max, Team), you are not billed per token, but you may still want to know what the same usage would cost at Anthropic API pricing. ai-cost is a local-first token tracker that answers both questions from files already on your disk.
+Claude Code does not show how many tokens you spend per day or per hour. If you are on a subscription (Pro, Max, Team), you are not billed per token, but you may still want to know what the same usage would cost at Anthropic API pricing. tokscope is a local-first token tracker that answers both questions from files already on your disk.
 
 ## Features
 
@@ -35,11 +35,11 @@ Claude Code does not show how many tokens you spend per day or per hour. If you 
 
 Today section, dark theme:
 
-![ai-cost Today section in dark theme, showing Claude Code token usage per hour, busiest hour and estimated cost](docs/screenshot-dark.png)
+![tokscope Today section in dark theme, showing Claude Code token usage per hour, busiest hour and estimated cost](docs/screenshot-dark.png)
 
 Full dashboard, dark theme (Today on top, 30-day Trends below):
 
-![ai-cost full dashboard in dark theme: Today section with hourly usage above the 30-day Trends section with daily tokens, per-model breakdown and cost](docs/screenshot-full-dark.png)
+![tokscope full dashboard in dark theme: Today section with hourly usage above the 30-day Trends section with daily tokens, per-model breakdown and cost](docs/screenshot-full-dark.png)
 
 ## How it works
 
@@ -110,13 +110,13 @@ Single-key shortcuts can be turned off in the shortcuts dialog (`?`).
 
 ### How do I see my Claude Code token usage?
 
-Run ai-cost, open http://127.0.0.1:3000 and click Connect. It imports the transcripts Claude Code already writes to `~/.claude/projects` and shows token usage per hour, day and model.
+Run tokscope, open http://127.0.0.1:3000 and click Connect. It imports the transcripts Claude Code already writes to `~/.claude/projects` and shows token usage per hour, day and model.
 
 ### How much would my Claude Code usage cost on the API?
 
 The dashboard multiplies your input, output, cache read and cache write tokens by Anthropic API prices per model and shows the total for today and for 7, 30 and 90 days. This is useful on Pro, Max or Team plans, which are not billed per token.
 
-### Does ai-cost send my data anywhere?
+### Does tokscope send my data anywhere?
 
 No. It reads transcripts through a read-only mount, stores data in a local SQLite file, and makes no LLM calls. The frontend binds to `127.0.0.1` and the backend port is not published.
 
@@ -191,7 +191,7 @@ Backend follows MVC with services and repositories. Frontend follows Feature-Sli
 
 Issues and pull requests are welcome. Use Conventional Commits, and make sure `make lint test` passes before you push.
 
-If ai-cost is useful to you, a star on GitHub helps others find it.
+If tokscope is useful to you, a star on GitHub helps others find it.
 
 ## License
 

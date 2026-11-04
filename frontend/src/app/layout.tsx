@@ -15,7 +15,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'Your Claude usage · ai-cost',
+  title: 'Your Claude usage · tokscope',
   description: 'Claude Code token usage dashboard',
 };
 

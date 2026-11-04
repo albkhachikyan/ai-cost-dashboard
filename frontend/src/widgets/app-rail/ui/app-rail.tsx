@@ -31,7 +31,7 @@ export function AppRail() {
       aria-label="Primary"
       className="hidden w-18 shrink-0 flex-col items-center gap-2 py-8 md:flex"
     >
-      <Link href="/" aria-label="ai-cost home" className="rounded-pill">
+      <Link href="/" aria-label="tokscope home" className="rounded-pill">
         <LogoMark />
       </Link>
       <ul className="mt-6 flex flex-col items-center gap-2">

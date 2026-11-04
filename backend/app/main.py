@@ -29,7 +29,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             with contextlib.suppress(asyncio.CancelledError):
                 await task
 
-    application = FastAPI(title="ai-cost", lifespan=lifespan)
+    application = FastAPI(title="tokscope", lifespan=lifespan)
     register_exception_handlers(application)
     application.include_router(health_controller.router)
     application.include_router(connection_controller.router)
