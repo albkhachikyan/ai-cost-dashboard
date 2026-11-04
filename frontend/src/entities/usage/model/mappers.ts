@@ -1,9 +1,14 @@
 import { formatTokens } from '@/shared/lib';
 
-import type { DailyUsage } from './types';
+import type { DailyUsage, HourlyUsage } from './types';
 
 export interface DailyTotal {
   day: string;
+  total: number;
+}
+
+export interface HourlyTotal {
+  hour: number;
   total: number;
 }
 
@@ -70,6 +75,35 @@ function levelOf(value: number, max: number, sortedRest: number[]): HeatmapCell[
   return 3;
 }
 
+function buildRows(
+  byModel: Map<string, Map<string, number>>,
+  columns: HeatmapColumn[],
+  describe: (columnLabel: string) => string,
+): HeatmapRow[] {
+  const raw = [...byModel.entries()]
+    .map(([model, buckets]) => ({
+      model,
+      values: columns.map((c) => buckets.get(c.key) ?? 0),
+    }))
+    .sort((a, b) => {
+      const sum = (v: number[]) => v.reduce((x, y) => x + y, 0);
+      return sum(b.values) - sum(a.values) || a.model.localeCompare(b.model);
+    });
+
+  const all = raw.flatMap((r) => r.values);
+  const max = Math.max(0, ...all);
+  const sortedRest = all.filter((v) => v > 0 && v < max).sort((a, b) => a - b);
+
+  return raw.map(({ model, values }) => ({
+    model,
+    cells: values.map((value, i) => ({
+      value,
+      level: levelOf(value, max, sortedRest),
+      label: `${describe(columns[i]?.label ?? '')}: ${formatTokens(value)} tokens`,
+    })),
+  }));
+}
+
 /** Daily columns for 7d, Monday-based week columns for longer windows. */
 export function toHeatmap(daily: DailyUsage[], days: number, today: string): Heatmap {
   const window = windowDays(days, today);
@@ -90,27 +124,45 @@ export function toHeatmap(daily: DailyUsage[], days: number, today: string): Hea
     byModel.set(d.model, buckets);
   });
 
-  const raw = [...byModel.entries()]
-    .map(([model, buckets]) => ({
-      model,
-      values: columns.map((c) => buckets.get(c.key) ?? 0),
-    }))
-    .sort((a, b) => {
-      const sum = (v: number[]) => v.reduce((x, y) => x + y, 0);
-      return sum(b.values) - sum(a.values) || a.model.localeCompare(b.model);
-    });
+  const rows = buildRows(byModel, columns, (col) => `${weekly ? 'Week of ' : ''}${col}`);
+  return { columns, rows };
+}
 
-  const all = raw.flatMap((r) => r.values);
-  const max = Math.max(0, ...all);
-  const sortedRest = all.filter((v) => v > 0 && v < max).sort((a, b) => a - b);
+const HOURS = Array.from({ length: 24 }, (_, h) => h);
 
-  const rows = raw.map(({ model, values }) => ({
-    model,
-    cells: values.map((value, i) => ({
-      value,
-      level: levelOf(value, max, sortedRest),
-      label: `${weekly ? 'Week of ' : ''}${columns[i]?.label ?? ''}: ${formatTokens(value)} tokens`,
-    })),
+export function formatHour(hour: number): string {
+  return `${String(hour).padStart(2, '0')}:00`;
+}
+
+/** Exactly 24 entries (UTC hours 0..23), summed across models, zero-filled. */
+export function toHourlyTotals(hourly: HourlyUsage[]): HourlyTotal[] {
+  const sums = new Map<number, number>();
+  hourly.forEach((h) => sums.set(h.hour, (sums.get(h.hour) ?? 0) + h.total));
+  return HOURS.map((hour) => ({ hour, total: sums.get(hour) ?? 0 }));
+}
+
+/** The hour with the most tokens (earliest on ties); null when nothing was used. */
+export function busiestHour(hourly: HourlyUsage[]): HourlyTotal | null {
+  let best: HourlyTotal | null = null;
+  toHourlyTotals(hourly).forEach((t) => {
+    if (t.total > 0 && (best === null || t.total > best.total)) best = t;
+  });
+  return best;
+}
+
+/** 24 hour columns, one row per model. */
+export function toHourlyHeatmap(hourly: HourlyUsage[]): Heatmap {
+  const columns: HeatmapColumn[] = HOURS.map((h) => ({
+    key: `h${String(h).padStart(2, '0')}`,
+    label: String(h).padStart(2, '0'),
   }));
+  const byModel = new Map<string, Map<string, number>>();
+  hourly.forEach((h) => {
+    const buckets = byModel.get(h.model) ?? new Map<string, number>();
+    const key = `h${String(h.hour).padStart(2, '0')}`;
+    buckets.set(key, (buckets.get(key) ?? 0) + h.total);
+    byModel.set(h.model, buckets);
+  });
+  const rows = buildRows(byModel, columns, (col) => `${col}:00 UTC`);
   return { columns, rows };
 }

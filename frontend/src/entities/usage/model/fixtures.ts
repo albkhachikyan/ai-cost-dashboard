@@ -16,4 +16,9 @@ export const reportFixture: UsageReport = {
     { model: 'claude-haiku-4-5', ...zero, total: 600_000, cost_usd: null, share: 0.18 },
     { model: 'claude-opus-4-5', ...zero, total: 2_800_000, cost_usd: 12.5, share: 0.82 },
   ],
+  hourly: [
+    { hour: 9, model: 'claude-opus-4-5', ...zero, total: 400_000, cost_usd: 1.5 },
+    { hour: 14, model: 'claude-opus-4-5', ...zero, total: 900_000, cost_usd: 3 },
+    { hour: 14, model: 'claude-haiku-4-5', ...zero, total: 100_000, cost_usd: null },
+  ],
 };

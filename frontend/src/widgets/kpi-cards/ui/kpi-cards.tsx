@@ -2,8 +2,8 @@ import { cva } from 'class-variance-authority';
 import { ArrowUpRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import type { UsageReport } from '@/entities/usage';
-import { cn, formatDay } from '@/shared/lib';
+import { busiestHour, formatHour, type UsageReport } from '@/entities/usage';
+import { cn, formatTokens } from '@/shared/lib';
 import { buttonVariants, CountUp, EmptyState, ScrollLink, Skeleton, panel } from '@/shared/ui';
 
 const kpiCard = cva('flex min-h-44 flex-col justify-between', {
@@ -42,9 +42,9 @@ function KpiCard({ id, title, value, caption, href, linkLabel, tone }: KpiCardPr
   return (
     <article aria-labelledby={id} className={cn(panel({ tone }), kpiCard({ tone }))}>
       <div className="flex min-h-10 items-start justify-between gap-2">
-        <h2 id={id} className="text-title">
+        <h3 id={id} className="text-title">
           {title}
-        </h2>
+        </h3>
         <ScrollLink
           href={href}
           aria-label={linkLabel}
@@ -63,12 +63,16 @@ function KpiCard({ id, title, value, caption, href, linkLabel, tone }: KpiCardPr
 
 interface KpiCardsProps {
   report: UsageReport;
-  /** UTC date (YYYY-MM-DD) treated as "today". */
-  today: string;
+  variant: 'today' | 'period';
+  /** Prefix for the card heading ids, unique per instance on the page. */
+  idPrefix: string;
+  /** Hrefs the card links scroll to. */
+  anchors: { cost: string; tokens: string; activity: string };
 }
 
-export function KpiCards({ report, today }: KpiCardsProps) {
-  if (report.daily.length === 0) {
+export function KpiCards({ report, variant, idPrefix, anchors }: KpiCardsProps) {
+  const period = variant === 'period';
+  if (period && report.daily.length === 0) {
     return (
       <EmptyState
         title="No usage yet"
@@ -76,39 +80,53 @@ export function KpiCards({ report, today }: KpiCardsProps) {
       />
     );
   }
-  const todayTotal = report.daily
-    .filter((d) => d.day === today)
-    .reduce((sum, d) => sum + d.total, 0);
   const modelCount = report.by_model.length;
+  const busiest = busiestHour(report.hourly);
+  const activeDays = new Set(report.daily.filter((d) => d.total > 0).map((d) => d.day)).size;
   return (
-    <section aria-label="Key figures" className="grid gap-4 md:gap-5 lg:grid-cols-3">
+    <section
+      aria-label={period ? 'Period key figures' : 'Today key figures'}
+      className="grid gap-4 md:gap-5 lg:grid-cols-3"
+    >
       <KpiCard
-        id="kpi-cost"
+        id={`${idPrefix}-cost`}
         title="Estimated cost"
         value={<CountUp value={report.totals.cost_usd} format="usd" />}
         caption={`Across ${modelCount} ${modelCount === 1 ? 'model' : 'models'}`}
-        href="#by-model"
-        linkLabel="Show cost by model"
+        href={anchors.cost}
+        linkLabel={period ? 'Show cost by model' : 'Show cost by hour'}
         tone="inverse"
       />
       <KpiCard
-        id="kpi-tokens"
+        id={`${idPrefix}-tokens`}
         title="Total tokens"
         value={<CountUp value={report.totals.total} format="tokens" />}
-        caption={`Last ${report.days} days`}
-        href="#tokens-per-day"
-        linkLabel="Show tokens per day"
+        caption={period ? `Last ${report.days} days` : 'Today (UTC)'}
+        href={anchors.tokens}
+        linkLabel={period ? 'Show tokens per day' : 'Show tokens per hour'}
         tone="default"
       />
-      <KpiCard
-        id="kpi-today"
-        title="Today"
-        value={<CountUp value={todayTotal} format="tokens" />}
-        caption={`${formatDay(today)} (UTC)`}
-        href="#activity"
-        linkLabel="Show activity"
-        tone="default"
-      />
+      {period ? (
+        <KpiCard
+          id={`${idPrefix}-average`}
+          title="Daily average"
+          value={<CountUp value={Math.round(report.totals.total / report.days)} format="tokens" />}
+          caption={`${activeDays} active ${activeDays === 1 ? 'day' : 'days'}`}
+          href={anchors.activity}
+          linkLabel="Show activity"
+          tone="default"
+        />
+      ) : (
+        <KpiCard
+          id={`${idPrefix}-busiest`}
+          title="Busiest hour"
+          value={busiest ? `${formatHour(busiest.hour)} UTC` : '—'}
+          caption={busiest ? `${formatTokens(busiest.total)} tokens` : 'No usage yet today'}
+          href={anchors.activity}
+          linkLabel="Show activity by hour"
+          tone="default"
+        />
+      )}
     </section>
   );
 }
@@ -116,7 +134,7 @@ export function KpiCards({ report, today }: KpiCardsProps) {
 export function KpiCardsSkeleton() {
   return (
     <div aria-hidden="true" className="grid gap-4 md:gap-5 lg:grid-cols-3">
-      {['cost', 'tokens', 'today'].map((key) => (
+      {['cost', 'tokens', 'third'].map((key) => (
         <Skeleton key={key} className="min-h-44 rounded-card bg-card" />
       ))}
     </div>

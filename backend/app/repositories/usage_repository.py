@@ -1,7 +1,7 @@
 import sqlite3
 
 from app.core.database import Database
-from app.domain.entities import DailyUsageRow, UsageRecord
+from app.domain.entities import DailyUsageRow, HourlyUsageRow, UsageRecord
 
 
 class UsageRepository:
@@ -53,6 +53,21 @@ class UsageRepository:
             )
             return [
                 DailyUsageRow(r["day"], r["model"], r["i"], r["o"], r["cr"], r["cw"])
+                for r in cursor.fetchall()
+            ]
+
+    def hourly(self, day: str) -> list[HourlyUsageRow]:
+        # timestamps are stored as UTC isoformat: chars 12-13 are the hour
+        with self._db.connect() as conn:
+            cursor = conn.execute(
+                "SELECT CAST(substr(timestamp, 12, 2) AS INTEGER) AS hour, model,"
+                " SUM(input_tokens) AS i, SUM(output_tokens) AS o,"
+                " SUM(cache_read_tokens) AS cr, SUM(cache_write_tokens) AS cw"
+                " FROM usage_records WHERE day = ? GROUP BY hour, model ORDER BY hour, model",
+                (day,),
+            )
+            return [
+                HourlyUsageRow(r["hour"], r["model"], r["i"], r["o"], r["cr"], r["cw"])
                 for r in cursor.fetchall()
             ]
 

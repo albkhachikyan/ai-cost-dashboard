@@ -88,8 +88,20 @@ Changing it = update `backend/app/schemas/`, `frontend/src/entities/*/model/type
       "share": 0.0,
     },
   ],
+  "hourly": [
+    {
+      "hour": 14,
+      "model": "claude-opus-5-5",
+      "input": 0,
+      "output": 0,
+      "cache_read": 0,
+      "cache_write": 0,
+      "total": 0,
+      "cost_usd": 0.0,
+    },
+  ],
 }
-// cost_usd is null when the model has no known price. day = UTC date. share = total / totals.total (0..1).
+// cost_usd is null when the model has no known price. day = UTC date. share = total / totals.total (0..1). hourly = today (UTC) by hour 0..23 and model, independent of days; only hours with data.
 ```
 
 Error body is always: `{"error": {"code": "SOURCE_NOT_FOUND", "message": "human readable"}}`.

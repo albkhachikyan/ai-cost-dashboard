@@ -2,7 +2,13 @@ import { render, screen } from '@testing-library/react';
 import { configureAxe } from 'vitest-axe';
 import { describe, expect, it, vi } from 'vitest';
 
-import { reportFixture, toDailyTotals, toHeatmap } from '@/entities/usage';
+import {
+  reportFixture,
+  toDailyTotals,
+  toHeatmap,
+  toHourlyHeatmap,
+  toHourlyTotals,
+} from '@/entities/usage';
 import { ActivityHeatmap } from '@/widgets/activity-heatmap';
 import { ShortcutsDialog } from '@/features/keyboard-shortcuts/ui/shortcuts-dialog';
 import { AppRail } from '@/widgets/app-rail';
@@ -36,16 +42,59 @@ const axe = configureAxe({ rules: { 'color-contrast': { enabled: false } } });
 const TODAY = '2026-11-03';
 
 describe('dashboard a11y', () => {
-  it('main widgets have no axe violations', async () => {
+  it('today and trends instances together have no axe violations or duplicate ids', async () => {
     const { container } = render(
       <main>
         <h1>Your Claude usage</h1>
-        <KpiCards report={reportFixture} today={TODAY} />
-        <TokensPerDay series={toDailyTotals(reportFixture.daily, 30, TODAY)} />
-        <ActivityHeatmap heatmap={toHeatmap(reportFixture.daily, 30, TODAY)} days={30} />
-        <ModelBreakdown models={reportFixture.by_model} />
+        <section aria-labelledby="today-title">
+          <h2 id="today-title">Today</h2>
+          <KpiCards
+            report={{ ...reportFixture, days: 1 }}
+            variant="today"
+            idPrefix="today-kpi"
+            anchors={{
+              cost: '#today-activity',
+              tokens: '#today-tokens',
+              activity: '#today-activity',
+            }}
+          />
+          <TokensPerDay
+            id="today-tokens"
+            granularity="hour"
+            series={toHourlyTotals(reportFixture.hourly)}
+          />
+          <ActivityHeatmap
+            id="today-activity"
+            mode="hour"
+            heatmap={toHourlyHeatmap(reportFixture.hourly)}
+            days={1}
+          />
+        </section>
+        <section aria-labelledby="trends-title">
+          <h2 id="trends-title">Trends</h2>
+          <KpiCards
+            report={reportFixture}
+            variant="period"
+            idPrefix="kpi"
+            anchors={{ cost: '#by-model', tokens: '#tokens-per-day', activity: '#activity' }}
+          />
+          <TokensPerDay
+            id="tokens-per-day"
+            granularity="day"
+            series={toDailyTotals(reportFixture.daily, 30, TODAY)}
+          />
+          <ActivityHeatmap
+            id="activity"
+            mode="range"
+            heatmap={toHeatmap(reportFixture.daily, 30, TODAY)}
+            days={30}
+          />
+          <ModelBreakdown models={reportFixture.by_model} />
+        </section>
       </main>,
     );
+    const ids = Array.from(container.querySelectorAll('[id]')).map((el) => el.id);
+    expect(new Set(ids).size).toBe(ids.length);
     expect((await axe(container)).violations).toEqual([]);
   });
 

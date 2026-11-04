@@ -15,6 +15,11 @@ class DailyUsage(TokenTotals):
     model: str
 
 
+class HourlyUsage(TokenTotals):
+    hour: int
+    model: str
+
+
 class ModelUsage(TokenTotals):
     model: str
     share: float
@@ -25,3 +30,4 @@ class UsageReport(BaseModel):
     totals: TokenTotals
     daily: list[DailyUsage]
     by_model: list[ModelUsage]
+    hourly: list[HourlyUsage]

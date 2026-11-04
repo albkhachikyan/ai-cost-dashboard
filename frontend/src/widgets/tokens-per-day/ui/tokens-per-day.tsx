@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority';
 import type { CSSProperties } from 'react';
 
-import type { DailyTotal } from '@/entities/usage';
+import { formatHour, type DailyTotal, type HourlyTotal } from '@/entities/usage';
 import { cn, formatDay, formatTokens } from '@/shared/lib';
 import { Skeleton, panel } from '@/shared/ui';
 
@@ -26,44 +26,72 @@ function axisLabel(day: string, days: number): string {
   });
 }
 
-interface TokensPerDayProps {
-  series: DailyTotal[];
-  className?: string;
+interface Point {
+  key: string;
+  total: number;
+  srLabel: string;
+  axisLabel: string | null;
 }
 
-export function TokensPerDay({ series, className }: TokensPerDayProps) {
-  const days = series.length;
-  const max = Math.max(0, ...series.map((d) => d.total));
-  const peakIndex = max > 0 ? series.findLastIndex((d) => d.total === max) : -1;
+type TokensPerDayProps = (
+  { granularity: 'day'; series: DailyTotal[] } | { granularity: 'hour'; series: HourlyTotal[] }
+) & { id: string; className?: string };
+
+function toPoints(props: TokensPerDayProps): Point[] {
+  if (props.granularity === 'hour') {
+    return props.series.map((entry) => ({
+      key: String(entry.hour),
+      total: entry.total,
+      srLabel: `${formatHour(entry.hour)} UTC: ${formatTokens(entry.total)} tokens`,
+      axisLabel: entry.hour % 3 === 0 ? String(entry.hour).padStart(2, '0') : null,
+    }));
+  }
+  const days = props.series.length;
   const step = labelStep(days);
+  return props.series.map((entry, index) => ({
+    key: entry.day,
+    total: entry.total,
+    srLabel: `${formatDay(entry.day)}: ${formatTokens(entry.total)} tokens`,
+    axisLabel: (days - 1 - index) % step === 0 ? axisLabel(entry.day, days) : null,
+  }));
+}
+
+const COPY = {
+  day: { title: 'Tokens per day', empty: 'No tokens recorded in this period.' },
+  hour: { title: 'Tokens per hour', empty: 'No tokens recorded today.' },
+} as const;
+
+export function TokensPerDay(props: TokensPerDayProps) {
+  const { id, className, granularity } = props;
+  const points = toPoints(props);
+  const max = Math.max(0, ...points.map((d) => d.total));
+  const peakIndex = max > 0 ? points.findLastIndex((d) => d.total === max) : -1;
+  const caption = granularity === 'hour' ? 'Today, UTC' : `Last ${points.length} days, UTC`;
 
   return (
     <section
-      id="tokens-per-day"
-      aria-labelledby="tokens-per-day-title"
+      id={id}
+      aria-labelledby={`${id}-title`}
       className={cn(panel(), 'flex scroll-mt-6 flex-col', className)}
     >
       <figure className="flex flex-1 flex-col gap-4">
         <figcaption className="flex min-h-10 flex-col">
-          <h2 id="tokens-per-day-title" className="text-title">
-            Tokens per day
-          </h2>
-          <p className="text-caption text-muted-foreground">Last {days} days, UTC</p>
+          <h3 id={`${id}-title`} className="text-title">
+            {COPY[granularity].title}
+          </h3>
+          <p className="text-caption text-muted-foreground">{caption}</p>
         </figcaption>
         {max === 0 ? (
           <p className="py-12 text-center text-body text-muted-foreground">
-            No tokens recorded in this period.
+            {COPY[granularity].empty}
           </p>
         ) : (
           <ol className="group/bars flex h-64 items-stretch gap-1 pt-10">
-            {series.map((entry, index) => {
-              const showLabel = (days - 1 - index) % step === 0;
+            {points.map((entry, index) => {
               const peak = index === peakIndex;
               return (
-                <li key={entry.day} className="group/bar relative flex min-w-0 flex-1 flex-col">
-                  <span className="sr-only">
-                    {formatDay(entry.day)}: {formatTokens(entry.total)} tokens
-                  </span>
+                <li key={entry.key} className="group/bar relative flex min-w-0 flex-1 flex-col">
+                  <span className="sr-only">{entry.srLabel}</span>
                   <div aria-hidden="true" className="relative flex flex-1 items-end">
                     <div
                       className="relative h-value min-h-1 w-full"
@@ -76,9 +104,9 @@ export function TokensPerDay({ series, className }: TokensPerDayProps) {
                     </div>
                   </div>
                   <div aria-hidden="true" className="relative h-6">
-                    {showLabel ? (
+                    {entry.axisLabel ? (
                       <span className="absolute top-2 left-1/2 -translate-x-1/2 text-caption whitespace-nowrap text-muted-foreground">
-                        {axisLabel(entry.day, days)}
+                        {entry.axisLabel}
                       </span>
                     ) : null}
                   </div>

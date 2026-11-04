@@ -52,14 +52,15 @@ Rules:
 - **Family:** `Outfit` via `next/font/google`, self-hosted, `display: swap`, weights **300, 400, 500, 600** only, exposed as `--font-sans`. Numbers use `tabular-nums`; if Outfit lacks `tnum`, use `Geist Mono` for table numbers only (`--font-mono`).
 - **Scale:** defined as `--text-*` with paired line-height, tracking and weight. Tailwind's default sizes (`text-xs` … `text-9xl`) are **not used** outside `shared/ui/shadcn/`.
 
-| Token          | Size / line-height                | Tracking | Weight | Use                               |
-| -------------- | --------------------------------- | -------- | ------ | --------------------------------- |
-| `text-display` | 3.5rem / 1.05 (2.5rem below `md`) | −0.03em  | 400    | The one `h1`                      |
-| `text-kpi`     | 3rem / 1                          | −0.02em  | 400    | KPI values                        |
-| `text-title`   | 1.125rem / 1.5rem                 | −0.01em  | 500    | Card and section titles (`h2`)    |
-| `text-body`    | 0.9375rem / 1.375rem              | 0        | 400    | Default text, table cells         |
-| `text-label`   | 0.8125rem / 1.125rem              | 0        | 500    | Pills, buttons, table headers     |
-| `text-caption` | 0.75rem / 1rem                    | 0.01em   | 400    | Axis labels, helper text, legends |
+| Token          | Size / line-height                | Tracking | Weight | Use                                    |
+| -------------- | --------------------------------- | -------- | ------ | -------------------------------------- |
+| `text-display` | 3.5rem / 1.05 (2.5rem below `md`) | −0.03em  | 400    | The one `h1`                           |
+| `text-kpi`     | 3rem / 1                          | −0.02em  | 400    | KPI values                             |
+| `text-section` | 1.75rem / 2.25rem                 | −0.02em  | 400    | Dashboard section `h2` (Today, Trends) |
+| `text-title`   | 1.125rem / 1.5rem                 | −0.01em  | 500    | Card and widget titles (`h3`)          |
+| `text-body`    | 0.9375rem / 1.375rem              | 0        | 400    | Default text, table cells              |
+| `text-label`   | 0.8125rem / 1.125rem              | 0        | 500    | Pills, buttons, table headers          |
+| `text-caption` | 0.75rem / 1rem                    | 0.01em   | 400    | Axis labels, helper text, legends      |
 
 - **Text rules:** sentence case everywhere, no all-caps labels. Use `text-wrap: balance` on headings and keep body text at most 65ch.
 
@@ -95,10 +96,14 @@ canvas (min-h-dvh, p-4 lg:p-8)
    └─ div (main column, p-6 lg:p-8)
       ├─ header.top-bar      palette trigger (search pill) ··· status pill
       ├─ main#content
-      │  ├─ headline row     h1 "Your Claude usage"   ··· range pill · sync · export
-      │  ├─ section KPI      3 cols (lg), 1 col (sm)  [cost: inverse] [total tokens] [today]
-      │  ├─ grid             tokens-per-day (lg:col-span-5) · activity (lg:col-span-7)
-      │  └─ section          by-model table (surface-warm, full width)
+      │  ├─ headline row     h1 "Your Claude usage"   ··· sync · connect
+      │  ├─ section#today    h2 "Today" + date (UTC); always first on load
+      │  │  ├─ KPI row       [cost: inverse] [total tokens] [busiest hour]
+      │  │  └─ grid          tokens per hour (lg:col-span-5) · activity by hour (lg:col-span-7)
+      │  └─ section#trends   h2 "Trends" ··· range pill (7d/30d/90d, default 30d) · export
+      │     ├─ KPI row       [cost: inverse] [total tokens] [daily average]
+      │     ├─ grid          tokens-per-day (lg:col-span-5) · activity (lg:col-span-7)
+      │     └─ by-model table (surface-warm, full width)
 ```
 
 - **Grid:** 12 columns from `lg`, a single column below. Never `100vh`; use `min-h-dvh`.

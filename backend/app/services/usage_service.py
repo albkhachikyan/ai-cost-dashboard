@@ -1,12 +1,24 @@
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
+from typing import Protocol
 
 from app.domain.entities import DailyUsageRow
 from app.repositories.usage_repository import UsageRepository
-from app.schemas.usage import DailyUsage, ModelUsage, TokenTotals, UsageReport
+from app.schemas.usage import DailyUsage, HourlyUsage, ModelUsage, TokenTotals, UsageReport
 from app.services.pricing_service import PricingCatalog
 
 COST_DECIMALS = 6
+
+
+class _TokenRow(Protocol):
+    @property
+    def input_tokens(self) -> int: ...
+    @property
+    def output_tokens(self) -> int: ...
+    @property
+    def cache_read_tokens(self) -> int: ...
+    @property
+    def cache_write_tokens(self) -> int: ...
 
 
 def _utc_today() -> date:
@@ -41,9 +53,11 @@ class UsageService:
         shares = [
             m.model_copy(update={"share": m.total / total if total else 0.0}) for m in by_model
         ]
-        return UsageReport(days=days, totals=totals, daily=daily, by_model=shares)
+        return UsageReport(
+            days=days, totals=totals, daily=daily, by_model=shares, hourly=self._hourly()
+        )
 
-    def _cost(self, model: str, row: DailyUsageRow) -> float | None:
+    def _cost(self, model: str, row: _TokenRow) -> float | None:
         cost = self._pricing.cost(
             model,
             input_tokens=row.input_tokens,
@@ -52,6 +66,22 @@ class UsageService:
             cache_write=row.cache_write_tokens,
         )
         return None if cost is None else round(cost, COST_DECIMALS)
+
+    def _hourly(self) -> list[HourlyUsage]:
+        rows = self._repo.hourly(self._today().isoformat())
+        return [
+            HourlyUsage(
+                hour=r.hour,
+                model=r.model,
+                input=r.input_tokens,
+                output=r.output_tokens,
+                cache_read=r.cache_read_tokens,
+                cache_write=r.cache_write_tokens,
+                total=r.input_tokens + r.output_tokens + r.cache_read_tokens + r.cache_write_tokens,
+                cost_usd=self._cost(r.model, r),
+            )
+            for r in sorted(rows, key=lambda r: (r.hour, r.model))
+        ]
 
     def _daily(self, row: DailyUsageRow) -> DailyUsage:
         return DailyUsage(

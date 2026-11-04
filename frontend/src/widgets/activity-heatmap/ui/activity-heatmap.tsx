@@ -13,46 +13,59 @@ function shortModel(model: string): string {
 interface ActivityHeatmapProps {
   heatmap: Heatmap;
   days: number;
+  /** 'hour' = today by hour (compact cells); 'range' = per day/week over `days`. */
+  mode: 'hour' | 'range';
+  id: string;
   className?: string;
 }
 
-export function ActivityHeatmap({ heatmap, days, className }: ActivityHeatmapProps) {
-  const unit = days > 7 ? 'week' : 'day';
+export function ActivityHeatmap({ heatmap, days, mode, id, className }: ActivityHeatmapProps) {
+  const hourly = mode === 'hour';
+  let unit = days > 7 ? 'week' : 'day';
+  if (hourly) unit = 'hour';
   return (
     <section
-      id="activity"
-      aria-labelledby="activity-title"
+      id={id}
+      aria-labelledby={`${id}-title`}
       className={cn(panel(), 'flex scroll-mt-6 flex-col gap-4', className)}
     >
       <div className="flex min-h-10 flex-col">
-        <h2 id="activity-title" className="text-title">
-          Activity
-        </h2>
+        <h3 id={`${id}-title`} className="text-title">
+          {hourly ? 'Activity by hour' : 'Activity'}
+        </h3>
         <p className="text-caption text-muted-foreground">Tokens by model per {unit}</p>
       </div>
       {heatmap.rows.length === 0 ? (
         <p className="py-12 text-center text-body text-muted-foreground">
-          No activity recorded in this period.
+          {hourly ? 'No activity recorded today.' : 'No activity recorded in this period.'}
         </p>
       ) : (
         <>
           <div data-lenis-prevent className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-1">
               <caption className="sr-only">
-                Tokens per model per {unit}, last {days} days
+                {hourly
+                  ? 'Tokens per model per hour, today (UTC)'
+                  : `Tokens per model per ${unit}, last ${days} days`}
               </caption>
               <thead>
                 <tr>
                   <th scope="col">
                     <span className="sr-only">Model</span>
                   </th>
-                  {heatmap.columns.map((column) => (
+                  {heatmap.columns.map((column, index) => (
                     <th
                       key={column.key}
                       scope="col"
                       className="pb-1 text-center text-caption font-normal whitespace-nowrap text-muted-foreground"
                     >
-                      {column.label}
+                      {/* 24 hour labels don't fit: show every 3rd, keep the rest for screen readers */}
+                      <span
+                        data-minor={hourly && index % 3 !== 0}
+                        className="data-[minor=true]:sr-only"
+                      >
+                        {column.label}
+                      </span>
                     </th>
                   ))}
                 </tr>
@@ -69,7 +82,10 @@ export function ActivityHeatmap({ heatmap, days, className }: ActivityHeatmapPro
                     </th>
                     {row.cells.map((cell, index) => (
                       <td key={heatmap.columns[index]?.key} className="p-0">
-                        <span data-level={cell.level} className={heatCell()}>
+                        <span
+                          data-level={cell.level}
+                          className={heatCell({ size: hourly ? 'compact' : 'cell' })}
+                        >
                           <span className="sr-only">{cell.label}</span>
                         </span>
                       </td>

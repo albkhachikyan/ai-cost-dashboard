@@ -67,3 +67,28 @@ def test_upsert_keeps_final_streamed_counts(tmp_path: Path) -> None:
     assert repo.insert_many((final,)) == 0  # not a new message
     assert repo.insert_many((partial,)) == 0  # stale line never lowers it
     assert repo.daily("2026-01-01")[0].output_tokens == 4650
+
+
+def test_hourly_groups_by_utc_hour_and_filters_day(tmp_path: Path) -> None:
+    db = Database(tmp_path / "u.db")
+    db.migrate()
+    repo = UsageRepository(db)
+
+    def at(mid: str, day: str, hour: str, model: str = "m") -> UsageRecord:
+        return UsageRecord(
+            mid, "s", "p", model, f"{day}T{hour}:03:00.123000+00:00", day, 1, 2, 3, 4
+        )
+
+    repo.insert_many(
+        (
+            at("a", "2026-11-03", "14"),
+            at("b", "2026-11-03", "14"),
+            at("c", "2026-11-03", "14", "n"),
+            at("d", "2026-11-03", "02"),
+            at("e", "2026-11-02", "14"),
+        )
+    )
+    rows = repo.hourly("2026-11-03")
+    assert [(r.hour, r.model) for r in rows] == [(2, "m"), (14, "m"), (14, "n")]
+    assert (rows[1].input_tokens, rows[1].cache_write_tokens) == (2, 8)
+    assert repo.hourly("2026-12-01") == []
