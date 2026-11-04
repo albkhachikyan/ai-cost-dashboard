@@ -87,11 +87,11 @@ export function CommandPaletteBody({ open, connected }: CommandPaletteBodyProps)
           />
         </CommandGroup>
         <CommandGroup heading="View">
-          {([1, 7, 30, 90] as const).map((days, i) => (
+          {([7, 30, 90] as const).map((days, i) => (
             <Row
               key={days}
               icon={<Calendar aria-hidden />}
-              label={days === 1 ? 'Today' : `Last ${days} days`}
+              label={`Last ${days} days`}
               keys={[String(i + 1)]}
               keywords={['range', 'period']}
               onSelect={exec(() => actions.setRange(days))}

@@ -135,6 +135,10 @@
   --text-kpi--line-height: 1;
   --text-kpi--letter-spacing: -0.02em;
   --text-kpi--font-weight: 400;
+  --text-section: 1.75rem;
+  --text-section--line-height: 2.25rem;
+  --text-section--letter-spacing: -0.02em;
+  --text-section--font-weight: 400;
   --text-title: 1.125rem;
   --text-title--line-height: 1.5rem;
   --text-title--letter-spacing: -0.01em;

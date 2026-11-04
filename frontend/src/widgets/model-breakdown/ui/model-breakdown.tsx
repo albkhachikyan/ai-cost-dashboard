@@ -13,9 +13,9 @@ export function ModelBreakdown({ models }: { models: ModelUsage[] }) {
       className={cn(panel({ tone: 'warm' }), 'flex scroll-mt-6 flex-col gap-4')}
     >
       <div className="flex min-h-10 items-center">
-        <h2 id="by-model-title" className="text-title">
+        <h3 id="by-model-title" className="text-title">
           By model
-        </h2>
+        </h3>
       </div>
       {sorted.length === 0 ? (
         <p className="py-8 text-center text-body text-muted-foreground">

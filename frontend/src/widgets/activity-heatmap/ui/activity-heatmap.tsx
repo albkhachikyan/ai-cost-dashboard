@@ -13,23 +13,26 @@ function shortModel(model: string): string {
 interface ActivityHeatmapProps {
   heatmap: Heatmap;
   days: number;
+  /** 'hour' = today by hour (compact cells); 'range' = per day/week over `days`. */
+  mode: 'hour' | 'range';
+  id: string;
   className?: string;
 }
 
-export function ActivityHeatmap({ heatmap, days, className }: ActivityHeatmapProps) {
-  const hourly = days === 1;
+export function ActivityHeatmap({ heatmap, days, mode, id, className }: ActivityHeatmapProps) {
+  const hourly = mode === 'hour';
   let unit = days > 7 ? 'week' : 'day';
   if (hourly) unit = 'hour';
   return (
     <section
-      id="activity"
-      aria-labelledby="activity-title"
+      id={id}
+      aria-labelledby={`${id}-title`}
       className={cn(panel(), 'flex scroll-mt-6 flex-col gap-4', className)}
     >
       <div className="flex min-h-10 flex-col">
-        <h2 id="activity-title" className="text-title">
-          Activity
-        </h2>
+        <h3 id={`${id}-title`} className="text-title">
+          {hourly ? 'Activity by hour' : 'Activity'}
+        </h3>
         <p className="text-caption text-muted-foreground">Tokens by model per {unit}</p>
       </div>
       {heatmap.rows.length === 0 ? (

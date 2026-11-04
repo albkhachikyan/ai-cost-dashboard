@@ -19,10 +19,9 @@ export function GlobalShortcuts({ connected }: { connected: boolean }) {
     s: idle(() => {
       if (connected) actions.sync();
     }),
-    '1': idle(() => actions.setRange(1)),
-    '2': idle(() => actions.setRange(7)),
-    '3': idle(() => actions.setRange(30)),
-    '4': idle(() => actions.setRange(90)),
+    '1': idle(() => actions.setRange(7)),
+    '2': idle(() => actions.setRange(30)),
+    '3': idle(() => actions.setRange(90)),
     e: idle(actions.exportCsv),
     t: idle(actions.cycleTheme),
   });

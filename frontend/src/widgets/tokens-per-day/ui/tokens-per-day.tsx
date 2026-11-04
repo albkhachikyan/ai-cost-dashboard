@@ -35,7 +35,7 @@ interface Point {
 
 type TokensPerDayProps = (
   { granularity: 'day'; series: DailyTotal[] } | { granularity: 'hour'; series: HourlyTotal[] }
-) & { className?: string };
+) & { id: string; className?: string };
 
 function toPoints(props: TokensPerDayProps): Point[] {
   if (props.granularity === 'hour') {
@@ -62,7 +62,7 @@ const COPY = {
 } as const;
 
 export function TokensPerDay(props: TokensPerDayProps) {
-  const { className, granularity } = props;
+  const { id, className, granularity } = props;
   const points = toPoints(props);
   const max = Math.max(0, ...points.map((d) => d.total));
   const peakIndex = max > 0 ? points.findLastIndex((d) => d.total === max) : -1;
@@ -70,15 +70,15 @@ export function TokensPerDay(props: TokensPerDayProps) {
 
   return (
     <section
-      id="tokens-per-day"
-      aria-labelledby="tokens-per-day-title"
+      id={id}
+      aria-labelledby={`${id}-title`}
       className={cn(panel(), 'flex scroll-mt-6 flex-col', className)}
     >
       <figure className="flex flex-1 flex-col gap-4">
         <figcaption className="flex min-h-10 flex-col">
-          <h2 id="tokens-per-day-title" className="text-title">
+          <h3 id={`${id}-title`} className="text-title">
             {COPY[granularity].title}
-          </h2>
+          </h3>
           <p className="text-caption text-muted-foreground">{caption}</p>
         </figcaption>
         {max === 0 ? (
